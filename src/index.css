@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #1B3A5C;
+  --color-navy-light: #2A5080;
+  --color-navy-dark: #122840;
+  --color-accent: #F0A500;
+  --color-accent-light: #FFD166;
+  --color-success: #16A34A;
+  --color-warning: #F59E0B;
+  --color-danger: #DC2626;
+  --color-bg: #F8F9FA;
+  --color-card: #FFFFFF;
+  --color-stage-inquiry: #3B82F6;
+  --color-stage-quotation: #8B5CF6;
+  --color-stage-followup: #F97316;
+  --color-stage-po: #06B6D4;
+  --color-stage-payment-terms: #EAB308;
+  --color-stage-advance: #84CC16;
+  --color-stage-dispatch: #6366F1;
+  --color-stage-invoice: #EC4899;
+  --color-stage-delivery: #14B8A6;
+  --color-stage-complete: #16A34A;
+}
+
+body {
+  margin: 0;
+  background-color: #F8F9FA;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+.mono {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+}

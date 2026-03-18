@@ -90,7 +90,16 @@ export default function NewOrder() {
   const [showClientList, setShowClientList] = useState(!presetClientId)
   const filteredClients = clients.filter(c => c.company_name.toLowerCase().includes(clientSearch.toLowerCase()))
   const selectedClientName = clients.find(c => c.id === selectedClient)?.company_name || ''
-  const hasValidProduct = items.some(i => i.name)
+  const hasValidProduct = items.some(i => i.name && i.name !== '__custom')
+
+  // Auto-select if exactly one client matches the search
+  const autoSelectClient = () => {
+    if (!selectedClient && filteredClients.length === 1 && clientSearch.trim()) {
+      setSelectedClient(filteredClients[0].id)
+      setClientSearch(filteredClients[0].company_name)
+      setShowClientList(false)
+    }
+  }
 
   return (
     <div className="pb-20">
@@ -116,17 +125,20 @@ export default function NewOrder() {
                     type="text"
                     value={clientSearch}
                     onChange={e => { setClientSearch(e.target.value); setSelectedClient('') }}
-                    placeholder="Search clients..."
+                    onBlur={autoSelectClient}
+                    placeholder="Search clients... (tap name to select)"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-navy focus:ring-2 focus:ring-navy/20 outline-none mb-2"
                   />
+                  {!selectedClient && <p className="text-xs text-amber-600 mb-2 px-1">Tap a client name below to select it</p>}
                   <div className="max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-xl">
                     {filteredClients.map(c => (
                       <button
                         key={c.id}
                         type="button"
                         onClick={() => { setSelectedClient(c.id); setClientSearch(c.company_name); setShowClientList(false) }}
-                        className={`w-full text-left px-4 py-3 text-sm border-b border-gray-50 ${selectedClient === c.id ? 'bg-navy/10 text-navy font-medium' : 'text-gray-700 active:bg-gray-50'}`}
+                        className={`w-full text-left px-4 py-3.5 text-sm border-b border-gray-50 flex items-center gap-3 ${selectedClient === c.id ? 'bg-navy/10 text-navy font-medium' : 'text-gray-700 active:bg-navy/5'}`}
                       >
+                        <span className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">{c.company_name.charAt(0)}</span>
                         {c.company_name}
                       </button>
                     ))}

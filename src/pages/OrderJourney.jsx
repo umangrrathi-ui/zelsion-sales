@@ -90,6 +90,9 @@ export default function OrderJourney() {
           <div>
             <h2 className="font-bold text-gray-900">{order.clients?.company_name}</h2>
             <p className="text-xs text-gray-500 mt-0.5">{order.clients?.contact_person} &middot; {order.clients?.city}</p>
+            {order.updated_by && (
+              <p className="text-[10px] text-gray-400 mt-1">Last updated by <span className="font-medium">{order.updated_by.split('@')[0]}</span></p>
+            )}
           </div>
           <div className="flex gap-2">
             {order.clients?.phone && (

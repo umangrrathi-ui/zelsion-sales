@@ -6,6 +6,7 @@ import StageBadge from '../UI/StageBadge'
 export default function OrderCard({ order }) {
   const navigate = useNavigate()
   const days = daysSince(order.updated_at)
+  const updatedByName = order.updated_by ? order.updated_by.split('@')[0] : null
 
   return (
     <button
@@ -24,6 +25,11 @@ export default function OrderCard({ order }) {
         {order.quantity_kg && <span>&middot; {order.quantity_kg} kg</span>}
         {days !== null && <span className="ml-auto">{days}d ago</span>}
       </div>
+      {updatedByName && (
+        <div className="mt-1.5 text-[10px] text-gray-400">
+          Updated by <span className="font-medium text-gray-500">{updatedByName}</span>
+        </div>
+      )}
     </button>
   )
 }

@@ -32,16 +32,17 @@ export function useOrders(filter) {
     const { data: { user } } = await supabase.auth.getUser()
     const { data, error } = await supabase
       .from('sales_orders')
-      .insert({ ...orderData, created_by: user.id })
+      .insert({ ...orderData, created_by: user.id, updated_by: user.email })
       .select()
       .single()
     return { data, error }
   }
 
   const updateOrder = async (id, updates) => {
+    const { data: { user } } = await supabase.auth.getUser()
     const { data, error } = await supabase
       .from('sales_orders')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updates, updated_at: new Date().toISOString(), updated_by: user?.email })
       .eq('id', id)
       .select('*, clients(company_name, contact_person, city, phone)')
       .single()
@@ -71,9 +72,10 @@ export function useOrder(id) {
   useEffect(() => { fetchOrder() }, [fetchOrder])
 
   const updateOrder = async (updates) => {
+    const { data: { user } } = await supabase.auth.getUser()
     const { data, error } = await supabase
       .from('sales_orders')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updates, updated_at: new Date().toISOString(), updated_by: user?.email })
       .eq('id', id)
       .select('*, clients(company_name, contact_person, city, phone, email, gst_number, state)')
       .single()

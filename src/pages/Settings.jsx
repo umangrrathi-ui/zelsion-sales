@@ -1,13 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/Layout/AppHeader'
-import { User, Mail, Lock, LogOut, Building2, Phone, Shield, Bell, ChevronRight, Check, UserPlus, X } from 'lucide-react'
+import { User, Mail, Lock, LogOut, Building2, Phone, Shield, Bell, ChevronRight, Check, UserPlus, X, Users } from 'lucide-react'
 
 export default function Settings() {
   const { user, signOut } = useAuth()
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [showAddUser, setShowAddUser] = useState(false)
+  const [teamMembers, setTeamMembers] = useState([])
+  const [loadingTeam, setLoadingTeam] = useState(true)
+
+  useEffect(() => {
+    loadTeamMembers()
+  }, [])
+
+  async function loadTeamMembers() {
+    setLoadingTeam(true)
+    const { data } = await supabase.from('profiles').select('*').order('created_at')
+    setTeamMembers(data || [])
+    setLoadingTeam(false)
+  }
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [newUserEmail, setNewUserEmail] = useState('')
@@ -74,6 +87,7 @@ export default function Settings() {
           setNewUserEmail('')
           setNewUserPassword('')
           setShowAddUser(false)
+          loadTeamMembers()
         }
       } else {
         // Fallback: regular signup (may require email confirmation)
@@ -94,10 +108,17 @@ export default function Settings() {
         } else if (data.identities && data.identities.length === 0) {
           setMessage({ type: 'error', text: 'This email is already registered.' })
         } else {
+          // Insert into profiles table
+          if (data.id) {
+            await supabase.from('profiles').upsert({
+              id: data.id, email: data.email || newUserEmail, display_name: (data.email || newUserEmail).split('@')[0]
+            }, { onConflict: 'id' })
+          }
           setMessage({ type: 'success', text: `User ${newUserEmail} created! Note: They may need to confirm their email before signing in.` })
           setNewUserEmail('')
           setNewUserPassword('')
           setShowAddUser(false)
+          loadTeamMembers()
         }
       }
     } catch (err) {
@@ -284,6 +305,32 @@ export default function Settings() {
           </div>
         </form>
       )}
+
+      {/* Team Members */}
+      <section className="mt-5 px-4">
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">Team Members ({teamMembers.length})</h3>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {loadingTeam ? (
+            <div className="p-4 text-center text-sm text-gray-400">Loading...</div>
+          ) : teamMembers.length === 0 ? (
+            <div className="p-4 text-center text-sm text-gray-400">No team members found</div>
+          ) : teamMembers.map((member, i) => (
+            <div key={member.id} className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white ${member.email === user?.email ? 'bg-navy' : 'bg-gray-400'}`}>
+                {(member.display_name || member.email || '?').substring(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {member.display_name || member.email?.split('@')[0]}
+                  {member.email === user?.email && <span className="text-xs text-navy ml-1.5">(You)</span>}
+                </p>
+                <p className="text-xs text-gray-400 truncate">{member.email}</p>
+              </div>
+              <span className="text-[10px] font-medium text-gray-400 uppercase px-2 py-1 bg-gray-50 rounded-full">{member.role || 'member'}</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Sign Out */}
       <div className="px-4 mt-6">

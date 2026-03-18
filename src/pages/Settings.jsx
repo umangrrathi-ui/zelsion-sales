@@ -50,26 +50,55 @@ export default function Settings() {
     }
     setSaving(true)
     try {
-      // Use Supabase Auth API to sign up a new user
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({
-          email: newUserEmail,
-          password: newUserPassword,
+      const serviceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY
+      if (serviceKey) {
+        // Use admin API to create user with auto-confirmed email
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/admin/users`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': serviceKey,
+            'Authorization': `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({
+            email: newUserEmail,
+            password: newUserPassword,
+            email_confirm: true,
+          })
         })
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        setMessage({ type: 'error', text: data.msg || data.error_description || 'Failed to create user' })
+        const data = await response.json()
+        if (!response.ok) {
+          setMessage({ type: 'error', text: data.msg || data.error_description || data.message || 'Failed to create user' })
+        } else {
+          setMessage({ type: 'success', text: `User ${newUserEmail} created! They can sign in immediately.` })
+          setNewUserEmail('')
+          setNewUserPassword('')
+          setShowAddUser(false)
+        }
       } else {
-        setMessage({ type: 'success', text: `User ${newUserEmail} created successfully! They can now sign in.` })
-        setNewUserEmail('')
-        setNewUserPassword('')
-        setShowAddUser(false)
+        // Fallback: regular signup (may require email confirmation)
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/signup`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            email: newUserEmail,
+            password: newUserPassword,
+          })
+        })
+        const data = await response.json()
+        if (!response.ok) {
+          setMessage({ type: 'error', text: data.msg || data.error_description || 'Failed to create user' })
+        } else if (data.identities && data.identities.length === 0) {
+          setMessage({ type: 'error', text: 'This email is already registered.' })
+        } else {
+          setMessage({ type: 'success', text: `User ${newUserEmail} created! Note: They may need to confirm their email before signing in.` })
+          setNewUserEmail('')
+          setNewUserPassword('')
+          setShowAddUser(false)
+        }
       }
     } catch (err) {
       setMessage({ type: 'error', text: 'Network error. Please try again.' })

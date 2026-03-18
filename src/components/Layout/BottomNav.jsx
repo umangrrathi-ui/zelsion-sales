@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, Users, Package, Plus, MoreHorizontal, CalendarClock, BarChart3, Settings, X } from 'lucide-react'
+import { Home, Users, Package, Plus, MoreHorizontal, CalendarClock, BarChart3, Settings, X, BoxesIcon } from 'lucide-react'
 
 const mainTabs = [
   { path: '/', label: 'Dashboard', icon: Home },
@@ -11,6 +11,7 @@ const mainTabs = [
 
 const moreItems = [
   { path: '/followups', label: 'Follow-ups', icon: CalendarClock, desc: 'Track pending follow-ups' },
+  { path: '/products', label: 'Manage Products', icon: BoxesIcon, desc: 'Add or edit product catalog' },
   { path: '/reports', label: 'Reports', icon: BarChart3, desc: 'Sales analytics & insights' },
   { path: '/settings', label: 'Settings', icon: Settings, desc: 'Account & preferences' },
 ]

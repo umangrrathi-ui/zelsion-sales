@@ -12,6 +12,7 @@ import NewOrder from './pages/NewOrder'
 import Followups from './pages/Followups'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import ManageProducts from './pages/ManageProducts'
 
 function ProtectedLayout() {
   return (
@@ -26,6 +27,7 @@ function ProtectedLayout() {
         <Route path="/followups" element={<Followups />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/products" element={<ManageProducts />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomNav />

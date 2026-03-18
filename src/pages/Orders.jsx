@@ -6,7 +6,7 @@ import OrderCard from '../components/Orders/OrderCard'
 import { SkeletonList } from '../components/UI/Skeleton'
 import EmptyState from '../components/UI/EmptyState'
 import { useOrders } from '../lib/hooks/useOrders'
-import { PRODUCTS } from '../lib/utils'
+import { getProducts } from '../lib/products'
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -55,7 +55,7 @@ export default function Orders() {
             className="px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white outline-none"
           >
             <option value="">All Products</option>
-            {PRODUCTS.map(p => <option key={p} value={p}>{p}</option>)}
+            {getProducts().map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
       </div>

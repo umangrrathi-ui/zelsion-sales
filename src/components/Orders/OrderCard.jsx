@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { daysSince } from '../../lib/utils'
+import { getProductNames } from '../../lib/products'
 import StageBadge from '../UI/StageBadge'
 
 export default function OrderCard({ order }) {
@@ -19,7 +20,7 @@ export default function OrderCard({ order }) {
         <StageBadge stage={order.current_stage} />
       </div>
       <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-        <span>{order.product_name}</span>
+        <span className="truncate">{getProductNames(order.product_name)}</span>
         {order.quantity_kg && <span>&middot; {order.quantity_kg} kg</span>}
         {days !== null && <span className="ml-auto">{days}d ago</span>}
       </div>

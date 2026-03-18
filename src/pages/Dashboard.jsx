@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Package, CalendarClock, AlertTriangle, CreditCard, Plus, ListChecks } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { daysSince, isOverdue, isToday, formatDateShort, getStageInfo } from '../lib/utils'
+import { getProductNames } from '../lib/products'
 import AppHeader from '../components/Layout/AppHeader'
 import StageBadge from '../components/UI/StageBadge'
 import { SkeletonList } from '../components/UI/Skeleton'
@@ -112,7 +113,7 @@ export default function Dashboard() {
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 text-sm truncate">{order.clients?.company_name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{order.product_name} &middot; {order.clients?.contact_person}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{getProductNames(order.product_name)} &middot; {order.clients?.contact_person}</p>
                 </div>
                 {isOverdue(order.next_followup_date) ? (
                   <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-bold flex-shrink-0">OVERDUE</span>
@@ -141,7 +142,7 @@ export default function Dashboard() {
                 <p className="font-medium text-gray-900 text-sm truncate">
                   {order.order_number} &middot; {order.clients?.company_name}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">{order.product_name}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{getProductNames(order.product_name)}</p>
               </div>
               <div className="flex flex-col items-end gap-1 flex-shrink-0">
                 <StageBadge stage={order.current_stage} />

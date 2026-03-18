@@ -60,7 +60,9 @@ export default function NewOrder() {
     navigate(`/orders/${data.id}`)
   }
 
+  const [showClientList, setShowClientList] = useState(!presetClientId)
   const filteredClients = clients.filter(c => c.company_name.toLowerCase().includes(clientSearch.toLowerCase()))
+  const selectedClientName = clients.find(c => c.id === selectedClient)?.company_name || ''
 
   return (
     <div className="pb-20">
@@ -71,26 +73,40 @@ export default function NewOrder() {
           <label className="block text-sm font-medium text-gray-700 mb-2">Select Client *</label>
           {!showNewClient ? (
             <>
-              <input
-                type="text"
-                value={clientSearch}
-                onChange={e => setClientSearch(e.target.value)}
-                placeholder="Search clients..."
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-navy focus:ring-2 focus:ring-navy/20 outline-none mb-2"
-              />
-              <div className="max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-xl">
-                {filteredClients.map(c => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => { setSelectedClient(c.id); setClientSearch(c.company_name) }}
-                    className={`w-full text-left px-4 py-3 text-sm border-b border-gray-50 ${selectedClient === c.id ? 'bg-navy/10 text-navy font-medium' : 'text-gray-700'}`}
-                  >
-                    {c.company_name}
-                  </button>
-                ))}
-                {filteredClients.length === 0 && <p className="px-4 py-3 text-sm text-gray-400">No clients found</p>}
-              </div>
+              {/* Selected client chip */}
+              {selectedClient && !showClientList ? (
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 flex items-center gap-2 px-4 py-3 rounded-xl bg-navy/10 border border-navy/20">
+                    <span className="w-8 h-8 rounded-lg bg-navy text-white flex items-center justify-center text-xs font-bold">{selectedClientName.charAt(0)}</span>
+                    <span className="text-sm font-medium text-navy">{selectedClientName}</span>
+                  </div>
+                  <button type="button" onClick={() => { setShowClientList(true); setSelectedClient(''); setClientSearch('') }}
+                    className="px-3 py-3 text-xs text-gray-500 bg-gray-100 rounded-xl font-medium">Change</button>
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={clientSearch}
+                    onChange={e => { setClientSearch(e.target.value); setSelectedClient('') }}
+                    placeholder="Search clients..."
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-navy focus:ring-2 focus:ring-navy/20 outline-none mb-2"
+                  />
+                  <div className="max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-xl">
+                    {filteredClients.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => { setSelectedClient(c.id); setClientSearch(c.company_name); setShowClientList(false) }}
+                        className={`w-full text-left px-4 py-3 text-sm border-b border-gray-50 ${selectedClient === c.id ? 'bg-navy/10 text-navy font-medium' : 'text-gray-700 active:bg-gray-50'}`}
+                      >
+                        {c.company_name}
+                      </button>
+                    ))}
+                    {filteredClients.length === 0 && <p className="px-4 py-3 text-sm text-gray-400">No clients found</p>}
+                  </div>
+                </>
+              )}
               <button type="button" onClick={() => setShowNewClient(true)} className="mt-2 text-sm text-navy font-medium">
                 + Create New Client
               </button>

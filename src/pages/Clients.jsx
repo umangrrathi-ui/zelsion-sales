@@ -71,13 +71,15 @@ export default function Clients() {
 
       {/* Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
-          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-end justify-center" onClick={() => setShowForm(false)}>
+          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 flex-shrink-0">
               <h2 className="text-lg font-semibold">New Client</h2>
               <button onClick={() => setShowForm(false)}><X size={24} className="text-gray-400" /></button>
             </div>
-            <ClientForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} loading={saving} />
+            <div className="overflow-y-auto flex-1 px-6 pb-6">
+              <ClientForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} loading={saving} />
+            </div>
           </div>
         </div>
       )}

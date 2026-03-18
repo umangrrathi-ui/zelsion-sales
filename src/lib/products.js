@@ -69,19 +69,21 @@ export function parseOrderItems(productName, quantityKg) {
 
 // Format order items for storage in product_name field
 export function formatOrderItems(items) {
-  if (!items || items.length === 0) return { product_name: '', quantity_kg: '' }
+  if (!items || items.length === 0) return { product_name: '', quantity_kg: null }
 
   if (items.length === 1) {
+    const qty = items[0].qty ? parseFloat(items[0].qty) : null
     return {
       product_name: items[0].name,
-      quantity_kg: items[0].qty || ''
+      quantity_kg: (qty && !isNaN(qty)) ? qty : null
     }
   }
 
   // Multiple items - store as JSON
+  const totalQty = items.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0)
   return {
     product_name: JSON.stringify(items.map(i => ({ name: i.name, qty: i.qty || '' }))),
-    quantity_kg: items.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0) || ''
+    quantity_kg: totalQty > 0 ? totalQty : null
   }
 }
 

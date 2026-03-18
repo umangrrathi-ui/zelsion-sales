@@ -8,6 +8,9 @@ export default function Stage5PaymentTerms({ order, onSave, expanded, loading })
     credit_days: order.credit_days || 0,
     payment_mode: order.payment_mode || '',
   })
+  const [customDays, setCustomDays] = useState(
+    !CREDIT_DAYS_OPTIONS.includes(order.credit_days || 0) && (order.credit_days || 0) > 0
+  )
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
   const showAdvance = form.payment_terms === 'Part Advance + Credit'
@@ -51,10 +54,44 @@ export default function Stage5PaymentTerms({ order, onSave, expanded, loading })
       )}
       <div>
         <label className="block text-xs font-medium text-gray-600 mb-1">Credit Days</label>
-        <select value={form.credit_days} onChange={e => set('credit_days', Number(e.target.value))}
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-navy bg-white">
-          {CREDIT_DAYS_OPTIONS.map(d => <option key={d} value={d}>{d} days</option>)}
-        </select>
+        {!customDays ? (
+          <div className="flex gap-2">
+            <select
+              value={form.credit_days}
+              onChange={e => {
+                if (e.target.value === '__custom') {
+                  setCustomDays(true)
+                  set('credit_days', '')
+                } else {
+                  set('credit_days', Number(e.target.value))
+                }
+              }}
+              className="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-navy bg-white"
+            >
+              {CREDIT_DAYS_OPTIONS.map(d => <option key={d} value={d}>{d} days</option>)}
+              <option value="__custom">Custom...</option>
+            </select>
+          </div>
+        ) : (
+          <div className="flex gap-2 items-center">
+            <input
+              type="number"
+              min={0}
+              value={form.credit_days}
+              onChange={e => set('credit_days', Number(e.target.value) || 0)}
+              placeholder="Enter days"
+              className="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-navy mono"
+            />
+            <span className="text-sm text-gray-500">days</span>
+            <button
+              type="button"
+              onClick={() => { setCustomDays(false); set('credit_days', 0) }}
+              className="text-xs text-navy font-medium px-2 py-1 bg-navy/10 rounded-lg"
+            >
+              Presets
+            </button>
+          </div>
+        )}
       </div>
       <div>
         <label className="block text-xs font-medium text-gray-600 mb-1">Payment Mode</label>

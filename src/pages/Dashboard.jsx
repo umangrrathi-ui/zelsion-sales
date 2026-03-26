@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Package, CalendarClock, AlertTriangle, CreditCard, Plus, ListChecks, ChevronRight, ChevronDown } from 'lucide-react'
+import { Package, CalendarClock, AlertTriangle, CreditCard, Plus, ListChecks, ChevronRight, ChevronDown, Weight, IndianRupee, Truck, CheckCircle2, Clock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { daysSince, isOverdue, isToday, formatDateShort, getStageInfo, STAGES } from '../lib/utils'
+import { daysSince, isOverdue, isToday, formatDateShort, getStageInfo, STAGES, formatCurrency } from '../lib/utils'
 import { getProductNames } from '../lib/products'
 import AppHeader from '../components/Layout/AppHeader'
 import StageBadge from '../components/UI/StageBadge'
@@ -144,6 +144,44 @@ export default function Dashboard() {
           <ListChecks size={18} /> Follow-ups
         </button>
       </div>
+
+      {/* Business Overview */}
+      {(() => {
+        const ordersWithPO = allOrders.filter(o => o.po_amount > 0)
+        const totalKg = allOrders.reduce((sum, o) => sum + (parseFloat(o.quantity_kg) || 0), 0)
+        const totalPOAmount = ordersWithPO.reduce((sum, o) => sum + (parseFloat(o.po_amount) || 0), 0)
+        const totalReceived = allOrders.reduce((sum, o) => sum + (parseFloat(o.advance_received) || 0) + (parseFloat(o.final_payment_amount) || 0), 0)
+        const deliveredCount = allOrders.filter(o => ['delivery', 'completed'].includes(o.current_stage)).length
+        const inProgressCount = allOrders.filter(o => !['completed', 'lost'].includes(o.current_stage) && !['inquiry', 'quotation', 'followup'].includes(o.current_stage)).length
+
+        const bizCards = [
+          { label: 'Total Quantity', value: totalKg > 0 ? `${totalKg.toLocaleString('en-IN')} kg` : '0 kg', icon: Weight, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Total PO Value', value: formatCurrency(totalPOAmount), icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Amount Received', value: formatCurrency(totalReceived), icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Delivered', value: deliveredCount, icon: Truck, color: 'text-teal-600', bg: 'bg-teal-50' },
+          { label: 'In Progress', value: inProgressCount, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+        ]
+
+        return (
+          <section className="mx-4 mt-5 bg-white rounded-2xl shadow-sm p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Business Overview</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {bizCards.map((card, i) => {
+                const Icon = card.icon
+                return (
+                  <div key={card.label} className={`${card.bg} rounded-xl p-3 ${i === bizCards.length - 1 && bizCards.length % 2 !== 0 ? 'col-span-2' : ''}`}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Icon size={16} className={card.color} />
+                      <span className="text-[11px] font-medium text-gray-500">{card.label}</span>
+                    </div>
+                    <p className={`text-lg font-bold ${card.color} mono`}>{card.value}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })()}
 
       {/* Tab Switcher */}
       <div className="flex gap-1 mx-4 mt-5 bg-gray-100 rounded-xl p-1">

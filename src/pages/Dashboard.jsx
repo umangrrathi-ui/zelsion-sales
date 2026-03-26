@@ -58,7 +58,7 @@ export default function Dashboard() {
       supabase.from('sales_orders')
         .select('*, clients(company_name, contact_person)')
         .lte('next_followup_date', today)
-        .not('current_stage', 'in', '("completed")')
+        .in('current_stage', ['inquiry', 'quotation', 'followup'])
         .not('followup_status', 'eq', 'Lost')
         .order('next_followup_date'),
       supabase.from('sales_orders')

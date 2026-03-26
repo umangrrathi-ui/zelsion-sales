@@ -20,7 +20,7 @@ export default function Followups() {
     const { data } = await supabase
       .from('sales_orders')
       .select('*, clients(company_name, contact_person)')
-      .not('current_stage', 'eq', 'completed')
+      .in('current_stage', ['inquiry', 'quotation', 'followup'])
       .not('followup_status', 'eq', 'Lost')
       .not('next_followup_date', 'is', null)
       .order('next_followup_date')

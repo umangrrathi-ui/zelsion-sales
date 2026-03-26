@@ -42,6 +42,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [expandedStages, setExpandedStages] = useState({})
   const [activeTab, setActiveTab] = useState('pipeline') // 'pipeline' or 'activity'
+  const [bizExpanded, setBizExpanded] = useState({})
 
   useEffect(() => {
     loadDashboard()
@@ -174,26 +175,36 @@ export default function Dashboard() {
         return (
           <section className="mx-4 mt-5 bg-white rounded-2xl shadow-sm p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3">Business Overview</h2>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {sections.map(s => {
                 const Icon = s.icon
+                const isOpen = bizExpanded[s.title]
                 return (
-                  <div key={s.title} className={`${s.bg} border ${s.border} rounded-xl p-3.5`}>
-                    <div className="flex items-center gap-2 mb-2.5">
+                  <div key={s.title} className={`${s.bg} border ${s.border} rounded-xl overflow-hidden`}>
+                    <button
+                      onClick={() => setBizExpanded(prev => ({ ...prev, [s.title]: !prev[s.title] }))}
+                      className="w-full flex items-center gap-2 px-3.5 py-3 text-left"
+                    >
                       <Icon size={18} className={s.color} />
                       <span className={`text-sm font-semibold ${s.color}`}>{s.title}</span>
                       <span className={`ml-auto text-lg font-bold ${s.color} mono`}>{s.count}</span>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="flex-1 bg-white/70 rounded-lg p-2.5 text-center">
-                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Quantity</p>
-                        <p className={`text-sm font-bold ${s.color} mono mt-0.5`}>{s.kg > 0 ? `${s.kg.toLocaleString('en-IN')} kg` : '—'}</p>
+                      {isOpen
+                        ? <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />
+                        : <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
+                      }
+                    </button>
+                    {isOpen && (
+                      <div className="flex gap-3 px-3.5 pb-3">
+                        <div className="flex-1 bg-white/70 rounded-lg p-2.5 text-center">
+                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Quantity</p>
+                          <p className={`text-sm font-bold ${s.color} mono mt-0.5`}>{s.kg > 0 ? `${s.kg.toLocaleString('en-IN')} kg` : '—'}</p>
+                        </div>
+                        <div className="flex-1 bg-white/70 rounded-lg p-2.5 text-center">
+                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Amount</p>
+                          <p className={`text-sm font-bold ${s.color} mono mt-0.5`}>{s.amount > 0 ? formatCurrency(s.amount) : '—'}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 bg-white/70 rounded-lg p-2.5 text-center">
-                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Amount</p>
-                        <p className={`text-sm font-bold ${s.color} mono mt-0.5`}>{s.amount > 0 ? formatCurrency(s.amount) : '—'}</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )
               })}

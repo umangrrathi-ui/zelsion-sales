@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Package, CalendarClock, AlertTriangle, CreditCard, Plus, ListChecks, ChevronRight, ChevronDown, Weight, IndianRupee, Truck, CheckCircle2, Clock } from 'lucide-react'
+import { Package, CalendarClock, AlertTriangle, CreditCard, Plus, ListChecks, ChevronRight, ChevronDown, Weight, IndianRupee, Truck, CheckCircle2, Clock, Calendar, Filter } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { daysSince, isOverdue, isToday, formatDateShort, getStageInfo, STAGES, formatCurrency } from '../lib/utils'
 import { getProductNames } from '../lib/products'
@@ -43,6 +43,33 @@ export default function Dashboard() {
   const [expandedStages, setExpandedStages] = useState({})
   const [activeTab, setActiveTab] = useState('pipeline') // 'pipeline' or 'activity'
   const [bizExpanded, setBizExpanded] = useState({})
+  const [dateRange, setDateRange] = useState('all') // 'thisMonth', 'lastMonth', 'thisQuarter', 'thisYear', 'custom', 'all'
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo] = useState('')
+
+  function getDateRange(preset) {
+    const now = new Date()
+    const y = now.getFullYear(), m = now.getMonth()
+    switch (preset) {
+      case 'thisMonth': return { from: new Date(y, m, 1), to: new Date(y, m + 1, 0) }
+      case 'lastMonth': return { from: new Date(y, m - 1, 1), to: new Date(y, m, 0) }
+      case 'thisQuarter': { const qm = Math.floor(m / 3) * 3; return { from: new Date(y, qm, 1), to: new Date(y, qm + 3, 0) } }
+      case 'thisYear': return { from: new Date(y, 0, 1), to: new Date(y, 11, 31) }
+      case 'custom': return { from: customFrom ? new Date(customFrom) : null, to: customTo ? new Date(customTo) : null }
+      default: return { from: null, to: null }
+    }
+  }
+
+  function filterByDate(orders) {
+    const { from, to } = getDateRange(dateRange)
+    if (!from && !to) return orders
+    return orders.filter(o => {
+      const d = new Date(o.created_at)
+      if (from && d < from) return false
+      if (to) { const end = new Date(to); end.setHours(23,59,59,999); if (d > end) return false }
+      return true
+    })
+  }
 
   useEffect(() => {
     loadDashboard()
@@ -148,20 +175,19 @@ export default function Dashboard() {
 
       {/* Business Overview */}
       {(() => {
-        // Inquiries = orders still in inquiry/quotation/followup stages
-        const inquiryOrders = allOrders.filter(o => ['inquiry', 'quotation', 'followup'].includes(o.current_stage))
+        const filtered = filterByDate(allOrders)
+
+        const inquiryOrders = filtered.filter(o => ['inquiry', 'quotation', 'followup'].includes(o.current_stage))
         const inquiryKg = inquiryOrders.reduce((sum, o) => sum + (parseFloat(o.quantity_kg) || 0), 0)
-        const inquiryAmount = inquiryOrders.reduce((sum, o) => sum + (parseFloat(o.po_amount) || parseFloat(o.quantity_kg) * 0 || 0), 0)
+        const inquiryAmount = inquiryOrders.reduce((sum, o) => sum + (parseFloat(o.po_amount) || 0), 0)
         const inquiryCount = inquiryOrders.length
 
-        // PO Generated = orders that have moved past followup (have PO) but not yet delivered/completed
-        const poOrders = allOrders.filter(o => !['inquiry', 'quotation', 'followup', 'delivery', 'completed', 'lost'].includes(o.current_stage))
+        const poOrders = filtered.filter(o => !['inquiry', 'quotation', 'followup', 'delivery', 'completed', 'lost'].includes(o.current_stage))
         const poKg = poOrders.reduce((sum, o) => sum + (parseFloat(o.quantity_kg) || 0), 0)
         const poAmount = poOrders.reduce((sum, o) => sum + (parseFloat(o.po_amount) || 0), 0)
         const poCount = poOrders.length
 
-        // Delivered = orders in delivery or completed stage
-        const deliveredOrders = allOrders.filter(o => ['delivery', 'completed'].includes(o.current_stage))
+        const deliveredOrders = filtered.filter(o => ['delivery', 'completed'].includes(o.current_stage))
         const deliveredKg = deliveredOrders.reduce((sum, o) => sum + (parseFloat(o.quantity_kg) || 0), 0)
         const deliveredAmount = deliveredOrders.reduce((sum, o) => sum + (parseFloat(o.po_amount) || 0), 0)
         const deliveredCount = deliveredOrders.length
@@ -172,9 +198,66 @@ export default function Dashboard() {
           { title: 'Delivered', count: deliveredCount, kg: deliveredKg, amount: deliveredAmount, icon: Truck, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
         ]
 
+        const presets = [
+          { key: 'all', label: 'All Time' },
+          { key: 'thisMonth', label: 'This Month' },
+          { key: 'lastMonth', label: 'Last Month' },
+          { key: 'thisQuarter', label: 'Quarter' },
+          { key: 'thisYear', label: 'This Year' },
+          { key: 'custom', label: 'Custom' },
+        ]
+
         return (
           <section className="mx-4 mt-5 bg-white rounded-2xl shadow-sm p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Business Overview</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-gray-900">Business Overview</h2>
+              <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                <Calendar size={12} />
+                <span>{dateRange === 'all' ? 'All Time' : dateRange === 'custom' ? 'Custom Range' : presets.find(p => p.key === dateRange)?.label}</span>
+              </div>
+            </div>
+
+            {/* Date Range Presets */}
+            <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1">
+              {presets.map(p => (
+                <button
+                  key={p.key}
+                  onClick={() => setDateRange(p.key)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium transition ${
+                    dateRange === p.key
+                      ? 'bg-navy text-white'
+                      : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Date Pickers */}
+            {dateRange === 'custom' && (
+              <div className="flex gap-2 mb-3">
+                <div className="flex-1">
+                  <label className="text-[10px] text-gray-400 font-medium uppercase">From</label>
+                  <input
+                    type="date"
+                    value={customFrom}
+                    onChange={e => setCustomFrom(e.target.value)}
+                    className="w-full mt-0.5 px-2.5 py-2 border border-gray-200 rounded-lg text-sm text-gray-700"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] text-gray-400 font-medium uppercase">To</label>
+                  <input
+                    type="date"
+                    value={customTo}
+                    onChange={e => setCustomTo(e.target.value)}
+                    className="w-full mt-0.5 px-2.5 py-2 border border-gray-200 rounded-lg text-sm text-gray-700"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
               {sections.map(s => {
                 const Icon = s.icon
